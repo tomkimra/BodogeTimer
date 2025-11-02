@@ -1,0 +1,182 @@
+<script setup>
+import { ref, computed, watch } from 'vue'
+
+const minutes = ref(1)
+const seconds = ref(0)
+const totalSeconds = ref(60)
+const timer = ref(null)
+const remaining = ref(60)
+const running = ref(false)
+
+
+
+import cuckooMp3 from './assets/cuckoo.mp3'
+import sound30 from './assets/sound_30.mp3'
+import sound20 from './assets/sound_20.mp3'
+import sound10 from './assets/sound_10.mp3'
+import sound9 from './assets/sound_9.mp3'
+import sound8 from './assets/sound_8.mp3'
+import sound7 from './assets/sound_7.mp3'
+import sound6 from './assets/sound_6.mp3'
+import sound5 from './assets/sound_5.mp3'
+import sound4 from './assets/sound_4.mp3'
+import sound3 from './assets/sound_3.mp3'
+import sound2 from './assets/sound_2.mp3'
+import sound1 from './assets/sound_1.mp3'
+
+const soundMap = {
+  60: cuckooMp3,
+  30: sound30,
+  20: sound20,
+  10: sound10,
+  9: sound9,
+  8: sound8,
+  7: sound7,
+  6: sound6,
+  5: sound5,
+  4: sound4,
+  3: sound3,
+  2: sound2,
+  1: sound1,
+  0: cuckooMp3,
+}
+
+function playSound(sec) {
+  let src = null
+  if (sec in soundMap) {
+    src = soundMap[sec]
+  } else if (sec === 0) {
+    src = cuckooMp3
+  }
+  if (src) {
+    const audio = new Audio(src)
+    audio.currentTime = 0
+    audio.play().catch(() => {})
+  }
+}
+
+
+const alertPoints = [60, 30, 20, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
+let alerted = []
+
+watch([minutes, seconds], () => {
+  totalSeconds.value = minutes.value * 60 + seconds.value
+  if (!running.value) remaining.value = totalSeconds.value
+})
+
+const display = computed(() => {
+  const m = Math.floor(remaining.value / 60).toString().padStart(2, '0')
+  const s = (remaining.value % 60).toString().padStart(2, '0')
+  return `${m}:${s}`
+})
+
+function startTimer() {
+  if (timer.value) clearInterval(timer.value)
+  running.value = true
+  remaining.value = totalSeconds.value
+  alerted = []
+  playSound(60) // ボタン押下時にcuckoo.mp3
+  timer.value = setInterval(() => {
+    if (remaining.value > 0) {
+      remaining.value--
+      if (alertPoints.includes(remaining.value) && !alerted.includes(remaining.value)) {
+        playSound(remaining.value)
+        alerted.push(remaining.value)
+      }
+    } else {
+      if (!alerted.includes(0)) {
+        playSound(0) // タイムアップ時
+        alerted.push(0)
+      }
+      clearInterval(timer.value)
+      running.value = false
+    }
+  }, 1000)
+}
+
+/** タイマーをリセットして停止 */
+function resetStop() {
+  if (timer.value) clearInterval(timer.value)
+  running.value = false
+  remaining.value = totalSeconds.value
+}
+
+/** ボタン押下時，タイマーを開始or値をリセットして再開 */
+function onButtonClick() {
+  startTimer()
+}
+
+
+</script>
+
+<template>
+  <v-app>
+    <v-main>
+      <v-app-bar app color="indigo" dark>
+        <v-toolbar-title>Bodoge Timer</v-toolbar-title>
+      </v-app-bar>
+      <v-container class="fill-height d-flex flex-column justify-center align-center bg-grey-darken-4 ">
+        <v-row class="mb-2" align="center" justify="center">
+          <v-col cols="auto">
+            <v-text-field
+              v-model.number="minutes"
+              label="Min"
+              type="number"
+              min="0"
+              max="99"
+              style="width: 80px"
+            />
+          </v-col>
+          <v-col cols="auto">
+            <v-text-field
+              v-model.number="seconds"
+              label="Sec"
+              type="number"
+              min="0"
+              max="59"
+              style="width: 80px"
+            />
+          </v-col>
+        </v-row>
+        <v-row align="center" justify="center">
+          <v-col cols="12" class="text-center">
+            <v-btn
+              color="indigo"
+              size="x-large"
+              class="timer-btn"
+              @click="onButtonClick"
+            >
+              {{ running ? 'Restart' : 'Start' }}
+            </v-btn>
+          </v-col>
+        </v-row>
+        <v-row align="center" justify="center">
+          <v-col cols="auto" class="text-center">
+            <v-btn class="bg-indigo-darken-2 text-white px-5" @click="resetStop">Reset</v-btn>
+          </v-col>
+        </v-row>
+        <v-row align="center" justify="center">
+          <v-col cols="12" class="text-center">
+            <div class="timer-display">{{ display }}</div>
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-main>
+  </v-app>
+</template>
+
+<style scoped>
+.timer-display {
+  font-size: 3rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+}
+.timer-btn {
+  width: 80vw;
+  max-width: 400px;
+  height: 80vw !important;
+  max-height: 400px !important;
+  font-size: 2rem;
+}
+
+</style>
