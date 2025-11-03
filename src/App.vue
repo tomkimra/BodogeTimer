@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 
 const minutes = ref(1)
 const seconds = ref(0)
@@ -40,19 +40,74 @@ const soundMap = {
   1: sound1,
   0: cuckooMp3,
 }
+const offsetMap = {
+  30: 0.1,
+  20: 0.1,
+  10: 0.1,
+  9: 0.1,
+  8: 0.1,
+  7: 0.1,
+  6: 0.1,
+  5: 0.1,
+  4: 0.1,
+  3: 0.1,
+  2: 0.1,
+  1: 0.1,
+}
+
+// キャッシュされた Audio インスタンス（プリロード用）
+const audioCache = {}
+
+function preloadAllSounds() {
+  Object.entries(soundMap).forEach(([key, src]) => {
+    try {
+      const a = new Audio()
+      a.preload = 'auto'
+      a.src = src
+      // 開始直後にロードを促す
+      a.load()
+      audioCache[key] = a
+    } catch (e) {
+      // 無視して続行
+      console.error('audio preload failed', key, e)
+    }
+  })
+}
+
+onMounted(() => {
+  preloadAllSounds()
+})
 
 function playSound(sec) {
+  const key = String(sec)
   let src = null
-  if (sec in soundMap) {
-    src = soundMap[sec]
-  } else if (sec === 0) {
-    src = cuckooMp3
+  if (key in soundMap) src = soundMap[key]
+  else if (sec === 0) src = cuckooMp3
+
+  if (!src) return
+
+  let offset = 0
+  if (key in offsetMap) {
+    offset = offsetMap[key]
   }
-  if (src) {
-    const audio = new Audio(src)
-    audio.currentTime = 0
-    audio.play().catch(() => {})
+
+  // プリロード済みのキャッシュがあれば cloneNode して再生（再ダウンロードを避ける）
+  const cached = audioCache[key]
+  if (cached) {
+    try {
+      const instance = cached.cloneNode(true)
+      instance.currentTime = offset // 開始直後の無音部分をスキップ
+      instance.play().catch(() => {})
+      return
+    } catch (e) {
+      // clone に失敗したらフォールバック
+    }
   }
+
+  // キャッシュがなければ通常再生
+  const audio = new Audio(src)
+  audio.currentTime = 0
+  audio.play().catch(() => {})
 }
 
 
@@ -173,9 +228,9 @@ function onButtonClick() {
 }
 .timer-btn {
   width: 80vw;
-  max-width: 400px;
+  max-width: 360px;
   height: 80vw !important;
-  max-height: 400px !important;
+  max-height: 360px !important;
   font-size: 2rem;
 }
 
