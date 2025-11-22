@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
+import About from './components/About.vue'
 
 const minutes = ref(1)
 const seconds = ref(0)
@@ -8,7 +9,7 @@ const timer = ref(null)
 const remaining = ref(60)
 const running = ref(false)
 
-
+const drawer = ref(false)
 
 import cuckooMp3 from './assets/cuckoo.mp3'
 import sound30 from './assets/sound_30.mp3'
@@ -169,7 +170,24 @@ function onButtonClick() {
     <v-main>
       <v-app-bar app color="indigo" dark>
         <v-toolbar-title>Bodoge Timer</v-toolbar-title>
+        <!-- <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon> -->
+        <About />
       </v-app-bar>
+      <v-navigation-drawer v-model="drawer" location="right">
+        <div class="pa-4">
+          <div class="font-weight-bold my-2">About</div>
+          <div>
+            中央のボタンを押してタイマー開始<br/>
+            もう一度押すと時間リセットして再開<br/>
+            30秒・20秒と10秒以下毎秒ボイス
+          </div>
+          <v-divider></v-divider>
+          <div class="font-weight-bold my-2">Credit</div>
+          <div>
+            音声素材: <a href="https://ondoku3.com">音読さん</a>
+          </div>
+        </div>
+      </v-navigation-drawer>
       <v-container class="fill-height d-flex flex-column justify-center align-center bg-grey-darken-4 ">
         <v-row class="mb-2" align="center" justify="center">
           <v-col cols="auto">
