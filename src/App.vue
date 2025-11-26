@@ -11,19 +11,19 @@ const running = ref(false)
 
 const drawer = ref(false)
 
-import cuckooMp3 from './assets/cuckoo.mp3'
-import sound30 from './assets/sound_30.mp3'
-import sound20 from './assets/sound_20.mp3'
-import sound10 from './assets/sound_10.mp3'
-import sound9 from './assets/sound_9.mp3'
-import sound8 from './assets/sound_8.mp3'
-import sound7 from './assets/sound_7.mp3'
-import sound6 from './assets/sound_6.mp3'
-import sound5 from './assets/sound_5.mp3'
-import sound4 from './assets/sound_4.mp3'
-import sound3 from './assets/sound_3.mp3'
-import sound2 from './assets/sound_2.mp3'
-import sound1 from './assets/sound_1.mp3'
+import cuckooMp3 from '/sound/cuckoo.mp3'
+import sound30 from '/sound/sound_30.mp3'
+import sound20 from '/sound/sound_20.mp3'
+import sound10 from '/sound/sound_10.mp3'
+import sound9 from '/sound/sound_9.mp3'
+import sound8 from '/sound/sound_8.mp3'
+import sound7 from '/sound/sound_7.mp3'
+import sound6 from '/sound/sound_6.mp3'
+import sound5 from '/sound/sound_5.mp3'
+import sound4 from '/sound/sound_4.mp3'
+import sound3 from '/sound/sound_3.mp3'
+import sound2 from '/sound/sound_2.mp3'
+import sound1 from '/sound/sound_1.mp3'
 
 const soundMap = {
   60: cuckooMp3,
