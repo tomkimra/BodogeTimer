@@ -11,36 +11,37 @@ const running = ref(false)
 
 const drawer = ref(false)
 
-import cuckooMp3 from './assets/cuckoo.mp3'
-import sound30 from './assets/sound_30.mp3'
-import sound20 from './assets/sound_20.mp3'
-import sound10 from './assets/sound_10.mp3'
-import sound9 from './assets/sound_9.mp3'
-import sound8 from './assets/sound_8.mp3'
-import sound7 from './assets/sound_7.mp3'
-import sound6 from './assets/sound_6.mp3'
-import sound5 from './assets/sound_5.mp3'
-import sound4 from './assets/sound_4.mp3'
-import sound3 from './assets/sound_3.mp3'
-import sound2 from './assets/sound_2.mp3'
-import sound1 from './assets/sound_1.mp3'
+import cuckooMp3 from '/sound/cuckoo.mp3'
+import sound30 from '/sound/sound_30.mp3'
+import sound20 from '/sound/sound_20.mp3'
+import sound10 from '/sound/sound_10.mp3'
+import sound9 from '/sound/sound_9.mp3'
+import sound8 from '/sound/sound_8.mp3'
+import sound7 from '/sound/sound_7.mp3'
+import sound6 from '/sound/sound_6.mp3'
+import sound5 from '/sound/sound_5.mp3'
+import sound4 from '/sound/sound_4.mp3'
+import sound3 from '/sound/sound_3.mp3'
+import sound2 from '/sound/sound_2.mp3'
+import sound1 from '/sound/sound_1.mp3'
 
 const soundMap = {
-  60: cuckooMp3,
-  30: sound30,
-  20: sound20,
-  10: sound10,
-  9: sound9,
-  8: sound8,
-  7: sound7,
-  6: sound6,
-  5: sound5,
-  4: sound4,
-  3: sound3,
-  2: sound2,
-  1: sound1,
-  0: cuckooMp3,
+  60: './sound/cuckoo.mp3',
+  30: './sound/sound_30.mp3',
+  20: './sound/sound_20.mp3',
+  10: './sound/sound_10.mp3',
+  9: './sound/sound_9.mp3',
+  8: './sound/sound_8.mp3',
+  7: './sound/sound_7.mp3',
+  6: './sound/sound_6.mp3',
+  5: './sound/sound_5.mp3',
+  4: './sound/sound_4.mp3',
+  3: './sound/sound_3.mp3',
+  2: './sound/sound_2.mp3',
+  1: './sound/sound_1.mp3',
+  0: './sound/cuckoo.mp3',
 }
+
 const offsetMap = {
   30: 0.1,
   20: 0.1,
@@ -56,61 +57,78 @@ const offsetMap = {
   1: 0.1,
 }
 
-// キャッシュされた Audio インスタンス（プリロード用）
+// // キャッシュされた Audio インスタンス（プリロード用）
+// const audioCache = {}
+
+// function preloadAllSounds() {
+//   Object.entries(soundMap).forEach(([key, src]) => {
+//     try {
+//       const a = new Audio()
+//       a.preload = 'auto'
+//       a.src = src
+//       // 開始直後にロードを促す
+//       a.load()
+//       audioCache[key] = a
+//     } catch (e) {
+//       // 無視して続行
+//       console.error('audio preload failed', key, e)
+//     }
+//   })
+// }
+
+// Howlerを使った実装
+import {Howl, Howler} from 'howler';
 const audioCache = {}
 
 function preloadAllSounds() {
-  Object.entries(soundMap).forEach(([key, src]) => {
-    try {
-      const a = new Audio()
-      a.preload = 'auto'
-      a.src = src
-      // 開始直後にロードを促す
-      a.load()
-      audioCache[key] = a
-    } catch (e) {
-      // 無視して続行
-      console.error('audio preload failed', key, e)
-    }
-  })
+  Object.entries(soundMap).forEach(([key, index]) => {
+    const sound = new Howl({
+      src: [soundMap[key]],
+      preload: true,
+    });
+    audioCache[key] = sound;
+  });
 }
 
 onMounted(() => {
   preloadAllSounds()
 })
 
-function playSound(sec) {
-  const key = String(sec)
-  let src = null
-  if (key in soundMap) src = soundMap[key]
-  else if (sec === 0) src = cuckooMp3
+// function playSound(sec) {
+//   const key = String(sec)
+//   let src = null
+//   if (key in soundMap) src = soundMap[key]
+//   else if (sec === 0) src = cuckooMp3
 
-  if (!src) return
+//   if (!src) return
 
-  let offset = 0
-  if (key in offsetMap) {
-    offset = offsetMap[key]
-  }
+//   let offset = 0
+//   if (key in offsetMap) {
+//     offset = offsetMap[key]
+//   }
 
-  // プリロード済みのキャッシュがあれば cloneNode して再生（再ダウンロードを避ける）
-  const cached = audioCache[key]
-  if (cached) {
-    try {
-      const instance = cached.cloneNode(true)
-      instance.currentTime = offset // 開始直後の無音部分をスキップ
-      instance.play().catch(() => {})
-      return
-    } catch (e) {
-      // clone に失敗したらフォールバック
-    }
-  }
+//   // プリロード済みのキャッシュがあれば cloneNode して再生（再ダウンロードを避ける）
+//   const cached = audioCache[key]
+//   if (cached) {
+//     try {
+//       const instance = cached.cloneNode(true)
+//       instance.currentTime = offset // 開始直後の無音部分をスキップ
+//       instance.play().catch(() => {})
+//       return
+//     } catch (e) {
+//       // clone に失敗したらフォールバック
+//     }
+//   }
 
-  // キャッシュがなければ通常再生
-  const audio = new Audio(src)
-  audio.currentTime = 0
-  audio.play().catch(() => {})
+//   // キャッシュがなければ通常再生
+//   const audio = new Audio(src)
+//   audio.currentTime = 0
+//   audio.play().catch(() => {})
+// }
+
+function playSound(sec){ 
+  audioCache[String(sec)].play()
 }
-
 
 const alertPoints = [60, 30, 20, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
 let alerted = []
@@ -188,7 +206,7 @@ function onButtonClick() {
           </div>
         </div>
       </v-navigation-drawer>
-      <v-container class="fill-height d-flex flex-column justify-center align-center bg-grey-darken-4 ">
+      <v-container class="fill-height d-flex flex-column justify-center align-center bg-grey-darken-4 container">
         <v-row class="mb-2" align="center" justify="center">
           <v-col cols="auto">
             <v-text-field
@@ -212,9 +230,9 @@ function onButtonClick() {
           </v-col>
         </v-row>
         <v-row align="center" justify="center">
-          <v-col cols="12" class="text-center">
+          <v-col cols="12" class="text-center btn-col">
             <v-btn
-              color="indigo"
+              color="primary"
               size="x-large"
               class="timer-btn"
               @click="onButtonClick"
@@ -245,11 +263,17 @@ function onButtonClick() {
   margin-bottom: 2rem;
 }
 .timer-btn {
-  width: 80vw;
+  width: 40vh;
   max-width: 360px;
-  height: 80vw !important;
+  height: 40vh !important;
   max-height: 360px !important;
   font-size: 2rem;
+}
+.btn-col {
+  margin-top: -2rem;
+}
+.container {
+  padding-bottom: 50px;
 }
 
 </style>
