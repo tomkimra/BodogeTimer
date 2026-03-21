@@ -11,22 +11,8 @@ const running = ref(false)
 
 const drawer = ref(false)
 
-import cuckooMp3 from '/sound/cuckoo.mp3'
-import sound30 from '/sound/sound_30.mp3'
-import sound20 from '/sound/sound_20.mp3'
-import sound10 from '/sound/sound_10.mp3'
-import sound9 from '/sound/sound_9.mp3'
-import sound8 from '/sound/sound_8.mp3'
-import sound7 from '/sound/sound_7.mp3'
-import sound6 from '/sound/sound_6.mp3'
-import sound5 from '/sound/sound_5.mp3'
-import sound4 from '/sound/sound_4.mp3'
-import sound3 from '/sound/sound_3.mp3'
-import sound2 from '/sound/sound_2.mp3'
-import sound1 from '/sound/sound_1.mp3'
-
 const soundMap = {
-  60: './sound/cuckoo.mp3',
+  60: './sound/sound_1min.mp3',
   30: './sound/sound_30.mp3',
   20: './sound/sound_20.mp3',
   10: './sound/sound_10.mp3',
@@ -39,95 +25,54 @@ const soundMap = {
   3: './sound/sound_3.mp3',
   2: './sound/sound_2.mp3',
   1: './sound/sound_1.mp3',
-  0: './sound/cuckoo.mp3',
+  0: './sound/start.mp3',
 }
-
-const offsetMap = {
-  30: 0.1,
-  20: 0.1,
-  10: 0.1,
-  9: 0.1,
-  8: 0.1,
-  7: 0.1,
-  6: 0.1,
-  5: 0.1,
-  4: 0.1,
-  3: 0.1,
-  2: 0.1,
-  1: 0.1,
-}
-
-// // キャッシュされた Audio インスタンス（プリロード用）
-// const audioCache = {}
-
-// function preloadAllSounds() {
-//   Object.entries(soundMap).forEach(([key, src]) => {
-//     try {
-//       const a = new Audio()
-//       a.preload = 'auto'
-//       a.src = src
-//       // 開始直後にロードを促す
-//       a.load()
-//       audioCache[key] = a
-//     } catch (e) {
-//       // 無視して続行
-//       console.error('audio preload failed', key, e)
-//     }
-//   })
-// }
 
 // Howlerを使った実装
 import {Howl, Howler} from 'howler';
 const audioCache = {}
 
-function preloadAllSounds() {
-  Object.entries(soundMap).forEach(([key, index]) => {
+// サウンドのバリアント（'A' または 'B'）
+const soundVariant = ref('A')
+
+function buildPath(key, variant){
+  const base = soundMap[key]
+  if (variant === 'B') return base.replace(/\.mp3$/, 'B.mp3')
+  return base
+}
+
+function preloadAllSounds(variant = 'A') {
+  Object.keys(soundMap).forEach((key) => {
+    const path = buildPath(key, variant)
     const sound = new Howl({
-      src: [soundMap[key]],
+      src: [path],
       preload: true,
     });
-    audioCache[key] = sound;
+    audioCache[`${variant}_${key}`] = sound;
   });
 }
 
 onMounted(() => {
-  preloadAllSounds()
+  preloadAllSounds(soundVariant.value)
 })
 
-// function playSound(sec) {
-//   const key = String(sec)
-//   let src = null
-//   if (key in soundMap) src = soundMap[key]
-//   else if (sec === 0) src = cuckooMp3
-
-//   if (!src) return
-
-//   let offset = 0
-//   if (key in offsetMap) {
-//     offset = offsetMap[key]
-//   }
-
-//   // プリロード済みのキャッシュがあれば cloneNode して再生（再ダウンロードを避ける）
-//   const cached = audioCache[key]
-//   if (cached) {
-//     try {
-//       const instance = cached.cloneNode(true)
-//       instance.currentTime = offset // 開始直後の無音部分をスキップ
-//       instance.play().catch(() => {})
-//       return
-//     } catch (e) {
-//       // clone に失敗したらフォールバック
-//     }
-//   }
-
-//   // キャッシュがなければ通常再生
-//   const audio = new Audio(src)
-//   audio.currentTime = 0
-//   audio.play().catch(() => {})
-// }
+watch(soundVariant, (v) => {
+  preloadAllSounds(v)
+})
 
 function playSound(sec){ 
-  audioCache[String(sec)].play()
+  const key = String(sec)
+  const variant = soundVariant.value
+  const cached = audioCache[`${variant}_${key}`]
+  if (cached) {
+    cached.play()
+    return
+  }
+  // 万一キャッシュがなければ遅延ロードして再生
+  const path = buildPath(key, variant)
+  const s = new Howl({ src: [path] })
+  audioCache[`${variant}_${key}`] = s
+  s.play()
 }
 
 const alertPoints = [60, 30, 20, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
@@ -149,7 +94,7 @@ function startTimer() {
   running.value = true
   remaining.value = totalSeconds.value
   alerted = []
-  playSound(60) // ボタン押下時にcuckoo.mp3
+  playSound(0) // ボタン押下時に1分音声（variantに依存）
   timer.value = setInterval(() => {
     if (remaining.value > 0) {
       remaining.value--
@@ -180,7 +125,6 @@ function onButtonClick() {
   startTimer()
 }
 
-
 </script>
 
 <template>
@@ -189,7 +133,7 @@ function onButtonClick() {
       <v-app-bar app color="indigo" dark>
         <v-toolbar-title>Bodoge Timer</v-toolbar-title>
         <!-- <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon> -->
-        <About />
+        <About v-model:soundVariant="soundVariant" />
       </v-app-bar>
       <v-navigation-drawer v-model="drawer" location="right">
         <div class="pa-4">
